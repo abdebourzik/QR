@@ -1,3 +1,5 @@
+// Fixed src/app/dashboard/page.tsx
+
 import { capitalize } from 'xtreme-ui';
 
 import { DashboardProvider } from '#components/context';
@@ -14,7 +16,7 @@ const navItems = [
 export async function generateMetadata ({ searchParams }: IMetaDataProps) {
 	const s = await searchParams;
 	return {
-		title: `OrderWorder${s.tab ? ` • ${capitalize(s.tab)}` : ''}`,
+		title: `OrderWorder${s.tab ? ` • ${capitalize(s.tab)}` : ' • Dashboard'}`,
 	};
 }
 

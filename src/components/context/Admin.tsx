@@ -1,3 +1,5 @@
+// Fixed src/components/context/Admin.tsx
+
 import { createContext, ReactNode, useEffect, useState } from 'react';
 
 import noop from 'lodash/noop';
@@ -32,38 +34,93 @@ export const AdminProvider = ({ children }: TAdminProviderProps) => {
 	const params = useSearchParams();
 	const tab = params.get('tab');
 	const subTab = params.get('subTab');
-	const { data: { profile, menus = [], tables = [] } = {}, isLoading: profileLoading, mutate: profileMutate } = useSWR('/api/admin', fetcher);
-	const { data: orderData = [], isLoading: orderLoading, mutate } = useSWR('/api/admin/order', fetcher, { refreshInterval: 5000 });
+	
+	// Fetch profile data
+	const { data: profileData, isLoading: profileLoading, mutate: profileMutate } = useSWR('/api/admin', fetcher);
+	const { profile, menus = [], tables = [] } = profileData || {};
+	
+	// Fetch orders data with more frequent refresh for active orders
+	const { data: orderData = [], isLoading: orderLoading, mutate } = useSWR(
+		'/api/admin/order', 
+		fetcher, 
+		{ 
+			refreshInterval: 3000, // Refresh every 3 seconds
+			revalidateOnFocus: true,
+			dedupingInterval: 1000 // Prevent duplicate requests within 1 second
+		}
+	);
+	
 	const [orderActionLoading, setOrderActionLoading] = useState(false);
 
+	// Process orders into categories
 	const { orderRequest, orderActive, orderHistory } = orderData?.reduce?.(
 		(acc: { orderRequest: TOrder[], orderActive: TOrder[], orderHistory: TOrder[] }, order: TOrder) => {
+			if (!order || !order._id) return acc; // Skip invalid orders
+			
 			if (order.state === 'active') {
-				if (order.products.some(({ adminApproved }) => adminApproved)) acc.orderActive.push(order);
-				if (order.products.some(({ adminApproved }) => !adminApproved)) acc.orderRequest.push(order);
+				const hasApproved = order.products?.some(({ adminApproved }) => adminApproved);
+				const hasUnapproved = order.products?.some(({ adminApproved }) => !adminApproved);
+				
+				if (hasApproved) acc.orderActive.push(order);
+				if (hasUnapproved) acc.orderRequest.push(order);
+			} else {
+				acc.orderHistory.push(order);
 			}
-			else acc.orderHistory.push(order);
 			return acc;
 		},
 		{ orderRequest: [], orderActive: [], orderHistory: [] },
-	) ?? {};
+	) ?? { orderRequest: [], orderActive: [], orderHistory: [] };
 
+	// Sort orders by date
 	[orderRequest, orderActive, orderHistory].forEach(arr => arr?.sort?.(sortByDate));
 
 	const orderAction = async (orderID: string, action: TOrderAction) => {
 		if (orderActionLoading) return;
+		
 		setOrderActionLoading(true);
-		const req = await fetch('/api/admin/order/action', { method: 'POST', body: JSON.stringify({ orderID, action }) });
-		const res = await req.json();
+		try {
+			const req = await fetch('/api/admin/order/action', { 
+				method: 'POST', 
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ orderID, action }) 
+			});
+			
+			const res = await req.json();
 
-		if (!req.ok) toast.error(res?.message);
-		await mutate();
-		setOrderActionLoading(false);
+			if (!req.ok) {
+				toast.error(res?.message || 'Order action failed');
+			} else {
+				toast.success(`Order ${action}ed successfully`);
+			}
+			
+			await mutate(); // Refresh orders
+		} catch (error) {
+			console.error('Order action error:', error);
+			toast.error('Failed to perform order action');
+		} finally {
+			setOrderActionLoading(false);
+		}
 	};
 
+	// Refresh orders when tab changes
 	useEffect(() => {
-		mutate();
+		if (tab === 'orders') {
+			mutate();
+		}
 	}, [tab, subTab, mutate]);
+
+	// Debug logging
+	useEffect(() => {
+		console.log('Orders Data:', {
+			total: orderData?.length || 0,
+			requests: orderRequest?.length || 0,
+			active: orderActive?.length || 0,
+			history: orderHistory?.length || 0,
+			loading: orderLoading
+		});
+	}, [orderData, orderRequest, orderActive, orderHistory, orderLoading]);
 
 	return (
 		<AdminContext.Provider value={{

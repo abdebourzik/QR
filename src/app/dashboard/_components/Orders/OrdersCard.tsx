@@ -1,3 +1,5 @@
+// Fixed src/app/dashboard/_components/Orders/OrdersCard.tsx
+
 import clsx from 'clsx';
 import { useSearchParams } from 'next/navigation';
 import { Button } from 'xtreme-ui';
@@ -89,7 +91,9 @@ const OrdersCard = (props: TOrdersCard) => {
 				{
 					!data?.products?.length
 						? <p className='noContent'>No orders yet</p>
-						: <p className='total rupee' onClick={() => showDetails?.(true)}>{data?.orderTotal}</p>
+						: <p className='total rupee' onClick={() => showDetails?.(true)}>
+							{data?.orderTotal ? data.orderTotal.toFixed(2) : '0.00'}
+						</p>
 				}
 				<OptionButtons />
 			</div>

@@ -30,7 +30,7 @@
 		}
 
 		&:active {
-			color: var(--colorBackgroundPrimary);
+			color: var(--colorBackgroundPrimary) !important; // Force white text
 			background-color: hsl(var(--colorBrandPrimary));
 
 			> span {
@@ -45,6 +45,9 @@
 			height: 100%;
 			text-transform: uppercase;
 			transition: width 0.1s ease-out, font-size 0s;
+			
+			// Fix: Ensure "Add" text is white when button is filled
+			color: hsl(var(--colorBrandPrimary));
 		}
 	}
 
@@ -107,13 +110,18 @@
 		}
 	}
 
+	// Fix: Filled state should have white text
 	&.filled {
 		.quantity {
-			color: white;
+			color: white !important; // Force white text
 			background-color: hsl(var(--colorBrandPrimary));
 
 			> span {
 				background-color: var(--colorBackgroundPrimary);
+			}
+			
+			&.increase {
+				color: white !important; // Ensure "Add" text is white
 			}
 		}
 	}
@@ -129,6 +137,8 @@
 		.increase {
 			width: var(--quantityButtonHeight);
 			font-size: 20px;
+			color: white !important; // White text for "+" icon
+			background-color: hsl(var(--colorBrandPrimary));
 		}
 	}
 }
@@ -158,3 +168,5 @@
 		transform: scale(0.9);
 	}
 }
+
+

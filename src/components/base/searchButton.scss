@@ -1,3 +1,4 @@
+// Fixed src/components/base/searchButton.scss
 .search {
 	position: relative;
 	width: var(--optionButtonSize);
@@ -8,42 +9,72 @@
 	align-items: center;
 	cursor: pointer;
 	transition: all 0.1s ease-out;
+	background-color: var(--colorBackgroundSecondary);
+	border: 1px solid var(--colorContentTertiary);
 
 	@media (hover: hover) {
 		&:hover {
-			div {
-				transform: scale(0.9);
-				transition: transform 0.11s cubic-bezier(0.175, 0.885, 0.320, 1.275);
-			}
-
-			span {
-				background-color: var(--colorBackgroundPrimary);
-				opacity: 1;
-			}
+			background-color: var(--colorBackgroundPrimary);
+			border-color: hsl(var(--colorBrandPrimary));
+			transform: scale(1.05);
 		}
 	}
 
 	&:active {
-		div {
-			box-shadow: var(--boxShadowGlowActive);
-		}
+		transform: scale(0.95);
 	}
 
-	.searchIcon  {
+	.searchIcon {
 		position: absolute;
-		margin: 0 16px;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
 		pointer-events: none;
+		color: var(--colorContentPrimary);
+		transition: all 0.2s ease;
+		z-index: 2;
+		
+		// Make sure the icon is always visible
+		opacity: 1 !important;
+		visibility: visible !important;
 	}
 
 	input {
 		position: absolute;
-		top: 0; left: 0;
+		top: 0; 
+		left: 0;
 		width: 0;
-		height: 0;
-		padding-left: var(--optionButtonSize);
-		padding-right: var(--optionButtonSize);
+		height: 100%;
+		padding: 0 var(--optionButtonSize);
 		border: none;
 		outline: none;
 		background-color: transparent;
+		color: var(--colorContentPrimary);
+		font-size: 14px;
+		border-radius: 9999px;
+		transition: all 0.2s ease;
+		
+		&:focus {
+			width: 250px;
+			background-color: var(--colorBackgroundPrimary);
+			border: 1px solid hsl(var(--colorBrandPrimary));
+			padding-left: calc(var(--optionButtonSize) + 8px);
+			padding-right: 16px;
+			box-shadow: 0 0 0 3px hsla(var(--colorBrandPrimary), 0.1);
+		}
+		
+		&::placeholder {
+			color: var(--colorContentSecondary);
+			opacity: 0.7;
+		}
+	}
+
+	// When search is active/focused
+	&:focus-within {
+		.searchIcon {
+			color: hsl(var(--colorBrandPrimary));
+			left: 16px;
+			transform: translateY(-50%);
+		}
 	}
 }
